@@ -10,4 +10,6 @@ public interface ReminderTaskRepository extends JpaRepository<ReminderTask, Long
 
     List<ReminderTask> findByDateTime(LocalDateTime dateTime);
     long countByChatId(Long chatId);
+    List<ReminderTask> findByChatIdOrderByDateTimeAsc(Long chatId);
+    ReminderTask findByIdAndChatId(Long id, Long chatId);
 }

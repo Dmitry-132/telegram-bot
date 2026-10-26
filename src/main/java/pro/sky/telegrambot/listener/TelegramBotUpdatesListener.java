@@ -39,8 +39,32 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 long chatId = update.message().chat().id();
 
                 if (messageText.startsWith("/start")) {
-                    telegramBot.execute(new SendMessage(chatId,
-                            "Это бот-напоминалка. Отправь сообщение в формате: дд.мм.гггг чч:мм Текст задачи"));
+                    telegramBot.execute(new SendMessage(chatId, "Это бот-напоминалка.\n\n" +
+                            "Отправь сообщение в формате:\n" +
+                            " \"дд.мм.гггг чч:мм Текст напоминалки\"\n" +
+                            "И этот бот напомнит небе о ней в указанное время\n\n" +
+                            "Ты также можешь посмотреть свои напоминалки командой /list\n" +
+                            "И удалить ненужные через /delete ID"));
+                    return;
+                }
+                if (messageText.equals("/list")) {
+                    String tasks = taskService.getUserTasks(chatId);
+                    telegramBot.execute(new SendMessage(chatId, tasks));
+                    return;
+                }
+                if (messageText.startsWith("/delete")) {
+                    try {
+                        String[] parts = messageText.split(" "); // разбивает строку по пробелам
+                        if (parts.length != 2) { //позже можно сделать удаление нескольких задач одной командой
+                            telegramBot.execute(new SendMessage(chatId, "Неверный формат. Напишите: /delete ID"));
+                            return;
+                        }
+                        long taskId = Long.parseLong(parts[1]); //превращает строку в число
+                        String result = taskService.deleteTask(chatId, taskId);
+                        telegramBot.execute(new SendMessage(chatId, result));
+                    } catch (NumberFormatException e) { //catch только для ошибки парсинга числа
+                        telegramBot.execute(new SendMessage(chatId, "ID должен быть числом. Напишите: /delete 123"));
+                    }
                     return;
                 }
                 telegramBot.execute(new SendMessage(chatId, taskService.processAndSaveTask(chatId, messageText)));
